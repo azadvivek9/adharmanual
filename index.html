@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadhar Card Generator & Printer</title>
+    <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f9;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h2 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+
+        /* Form Styling */
+        .form-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input, textarea {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus, textarea:focus {
+            border-color: #0056b3;
+        }
+
+        /* Preview Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .print-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+        .print-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Live Preview Layout */
+        .preview-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            background: #e9ecef;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        /* Card Absolute Dimensions (CRITICAL FOR PRINT) */
+        .card {
+            width: 85.6mm;
+            height: 53.98mm;
+            border: 1px solid #ccc;
+            position: relative;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            background-color: #fff;
+        }
+
+        #front-preview {
+            background-image: url('frontcard.jpg');
+        }
+
+        #back-preview {
+            background-image: url('backcard.jpg');
+        }
+
+        /* Front Card Elements Alignment */
+        .photo-slot {
+            position: absolute;
+            top: 12.1mm;
+            left: 8.39mm;
+            width: 17.2mm;
+            height: 20.8mm;
+            background-color: #f408087b;
+            background-size: cover;
+            background-position: center;
+        }
+        .front-info {
+            position: absolute;
+            top: 21mm;
+            left: 26mm;
+            width: 56mm;
+            font-size: 8.5pt;
+            line-height: 1.2;
+            color: #000;
+        }
+        .info-block {
+            margin-bottom: 3px;
+        }
+        .hindi-text {
+            font-weight: 500;
+            display: block;
+            position: relative;
+            top: -8.8mm;
+            left: 2mm;
+            font-size: 6pt;
+            font-weight: 500;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .english-text {
+            font-weight: 600;
+            display: block;
+            position: relative;
+            top: -8.4mm;
+            left: 2mm;
+            font-size: 6.5pt;
+            font-weight: 500;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .card-number {
+            position: absolute;
+            top: 43mm;
+            bottom: 6mm;
+            width: 100%;
+            text-align: center;
+            font-size: 12pt;
+            font-weight: 600;
+            letter-spacing: 0.02mm;
+            color: #000;
+            transform: scaleY(1.02);
+        }
+        .issue-date {
+            position: absolute;
+            left: 2.8mm;
+            top: 36mm;
+            transform: rotate(-90deg);
+            transform-origin: left top;
+            font-size: 5pt;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Back Card Elements Alignment */
+        .back-info {
+            position: absolute;
+            top: 12mm;
+            left: 4.5mm;
+            width: 48mm;
+            font-size: 7.5pt;
+            line-height: 1.25;
+            color: #000;
+            font-size: 5.5pt;
+        }
+        .qrslot {
+            position: absolute;
+            top: 11.1mm;
+            left: 51.6mm;
+            width: 30.8mm;
+            height: 30mm;
+            background-color: #f408087b;
+            background-size: cover;
+            background-position: center;
+        }
+
+
+        /* Print Media Query Optimization */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .form-section, .actions, h2 {
+                display: none !important;
+            }
+            .preview-section {
+                background: transparent;
+                padding: 0;
+                display: block;
+            }
+            .card {
+                
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 2px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Aadhar Card Studio Dashboard</h2>
+
+    <div class="form-section">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="in-name-hi">Name (Hindi)</label>
+                <input type="text" id="in-name-hi" placeholder="नाम दर्ज करें" value="बादल कुमार">
+            </div>
+            <div class="form-group">
+                <label for="in-name-en">Name (English)</label>
+                <input type="text" id="in-name-en" placeholder="Enter full name" value="Badal Kumar">
+            </div>
+            <div class="form-group">
+                <label for="in-dob">DOB (DD/MM/YYYY)</label>
+                <input type="text" id="in-dob" placeholder="01/01/2000" value="05/06/2009">
+            </div>
+            <div class="form-group">
+                <label for="in-gender">Gender (HIN/ENG)</label>
+                <input type="text" id="in-gender" placeholder="पुरुष / MALE" value="पुरुष/ MALE">
+            </div>
+            <div class="form-group">
+                <label for="in-photo">Profile Photo</label>
+                <input type="file" id="in-photo" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="in-qr">QR Code Upload </label>
+                <input type="file" id="in-qr" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="in-issue-date">Issue Date (Left Margin)</label>
+                <input type="text" id="in-issue-date" placeholder="01/12/2015" value="01/12/2015">
+            </div>
+            <div class="form-group">
+                <label for="in-uid">12-Digit Number</label>
+                <input type="text" id="in-uid" maxlength="14" placeholder="XXXX XXXX XXXX" value="6323 4348 0115">
+            </div>
+
+            <div class="form-group full-width">
+                <label for="in-address-hi">Address (Hindi)</label>
+                <textarea id="in-address-hi" rows="2" placeholder="पता: आत्मज: ...">आत्मज: सुरेन्द्र पासवान, वार्ड न.02, सक्रौली, अजीजपुर चांदे, वैशाली, बिहार - 843110</textarea>
+            </div>
+            <div class="form-group full-width">
+                <label for="in-address-en">Address (English)</label>
+                <textarea id="in-address-en" rows="2" placeholder="Address: S/O: ...">S/O: Surendra Paswan, ward no.02, Sakrauli, PO: Ajijpur Chande, DIST: Vaishali, Bihar - 843110</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="print-btn" onclick="window.print()">Print Cards</button>
+    </div>
+
+    <div class="preview-section">
+        
+        <div class="card" id="front-preview">
+            <div class="issue-date" id="lbl-issue">Aadhar no. issued: 01/12/2015</div>
+            <div class="photo-slot" id="photo-display"></div>
+            <div class="front-info">
+                <div class="info-block">
+                    <span class="hindi-text" id="lbl-name-hi">बादल कुमार</span>
+                    <span class="english-text" id="lbl-name-en">Badal Kumar</span>
+                </div>
+                <div class="info-block" style="margin-top: 5px;">
+                    <span class="hindi-text" id="lbl-dob-label">जन्म तिथि / DOB: <span style="font-weight:400;" id="lbl-dob">05/06/2009</span></span>
+                </div>
+                <div class="info-block">
+                    <span class="hindi-text" id="lbl-gender">पुरुष/ MALE</span>
+                </div>
+            </div>
+            <div class="card-number" id="lbl-uid-front">6323 4348 0115</div>
+        </div>
+
+        <div class="card" id="back-preview">
+            <div class="qrslot" id="qrdisplay"></div>
+            <div class="back-info">
+                <span style="font-weight: 600; display: block; margin-bottom: 2px;">पता:</span>
+                <p id="lbl-address-hi" style="margin-bottom: 5px; font-weight: 500;">आत्मज: सुरेन्द्र पासवान, वार्ड न.02, सक्रौली, अजीजपुर चांदे, वैशाली, बिहार - 843110</p>
+                
+                <span style="font-weight: 600; display: block; margin-bottom: 2px;">Address:</span>
+                <p id="lbl-address-en" style="font-weight: 500;">S/O: Surendra Paswan, ward no.02, Sakrauli, PO: Ajijpur Chande, DIST: Vaishali, Bihar - 843110</p>
+            </div>
+            <div class="card-number" id="lbl-uid-back" style="bottom: 7mm;">6323 4348 0115</div>
+        
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Mapping inputs to DOM elements for Live Previews
+    const inputs = [
+        { id: 'in-name-hi', target: 'lbl-name-hi', prop: 'innerText' },
+        { id: 'in-name-en', target: 'lbl-name-en', prop: 'innerText' },
+        { id: 'in-dob', target: 'lbl-dob', prop: 'innerText' },
+        { id: 'in-gender', target: 'lbl-gender', prop: 'innerText' },
+        { id: 'in-address-hi', target: 'lbl-address-hi', prop: 'innerText' },
+        { id: 'in-address-en', target: 'lbl-address-en', prop: 'innerText' },
+        
+    ];
+
+    // Real-time Text Updates sync
+    inputs.forEach(item => {
+        const inputEl = document.getElementById(item.id);
+        const targetEl = document.getElementById(item.target);
+        
+        inputEl.addEventListener('input', () => {
+            targetEl[item.prop] = inputEl.value;
+        });
+    });
+
+    // Special handler for ID Number to update both Front and Back previews simultaneously
+    const uidInput = document.getElementById('in-uid');
+    const uidFront = document.getElementById('lbl-uid-front');
+    const uidBack = document.getElementById('lbl-uid-back');
+
+    uidInput.addEventListener('input', () => {
+        let val = uidInput.value;
+        uidFront.innerText = val;
+        uidBack.innerText = val;
+    });
+
+    // Left alignment border Issue Date update
+    const issueInput = document.getElementById('in-issue-date');
+    const issueLbl = document.getElementById('lbl-issue');
+    issueInput.addEventListener('input', () => {
+        issueLbl.innerText = `Aadhar no. issued: ${issueInput.value}`;
+    });
+
+    // Image Upload and Render Logic
+    const photoInput = document.getElementById('in-photo');
+    const photoDisplay = document.getElementById('photo-display');
+    const qrInput = document.getElementById('in-qr');
+    const qrDisplay = document.getElementById('qrdisplay');
+
+    photoInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.addEventListener('load', function() {
+                photoDisplay.style.backgroundImage = `url(${this.result})`;
+            });
+            reader.readAsDataURL(file);
+        }
+    });
+    qrInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.addEventListener('load', function() {
+                qrDisplay.style.backgroundImage = `url(${this.result})`;
+            });
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+
+</body>
+</html>
